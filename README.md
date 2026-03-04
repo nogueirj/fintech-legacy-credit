@@ -250,3 +250,4 @@ Este projeto é parte de um exercício de refatoração de código legado.
 
 Desenvolvido como exemplo de aplicação Spring Boot com boas práticas de desenvolvimento.
 
+## Branch Kelvin 👾
