@@ -2,6 +2,26 @@
 
 Aplicação de análise de crédito desenvolvida com Spring Boot 4.0.3, JPA, H2 Database e DevTools.
 
+## ☠️ Problemas encontrados
+
+### Controller:
+
+
+### Model:
+OK
+
+### Repository:
+OK
+
+### Service Analise de crédito:
+-  Método ´analisarSolicitacao´ é um código podre pois é muito longo 
+- O código que analisa PJ e PF é o mesmo e pode ser passado para uma método (código repetido)
+
+### Service Processador de venda
+- 
+
+### Testes
+
 ## 🚀 Tecnologias Utilizadas
 
 - **Java 21**
