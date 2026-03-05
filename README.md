@@ -2,6 +2,98 @@
 
 Aplicação de análise de crédito desenvolvida com Spring Boot 4.0.3, JPA, H2 Database e DevTools.
 
+# ☠️ Problemas encontrados
+
+# Controller:
+
+## SolicitacaoCreditoController.analisarSolicitacao() --- NATAN KAINAK
+Arquivo: SolicitacaoCreditoController.java
+
+- Feature Envy: Usa HashMap<String, Object> em vez de DTOs (SolicitacaoResponse), perdendo a clareza do contrato da API.
+  O Controller precisa saber exatamente quais são as chaves ("valor", "cliente", "aprovado") para montar a resposta, em vez de apenas retornar um objeto ResultadoAnalise
+- Inconsistência de URL: Mapeamento no controller diverge do que está sendo testado.
+- Aceita valores negativos ou strings vazias sem erro. Poderia ter um '@NotNull(message = "O valor é obrigatório")' por exemplo.
+- O código recebe Double(pode ser null) mas o método recebe double (que não pode ser null). Isso gera o risco de se ter um NullPointerException caso o valor venha como null.
+- O catch (Exception e) esconde bugs reais do sistema.
+
+## Dívida Técnica - Vitor Parente
+
+### Code smells Testes Frágeis
+
+**Explicação:**  
+Quando um teste depende da data atual, do estado do banco ou da configuração do ambiente, ele deixa de ser totalmente previsível. Isso significa que dois desenvolvedores executando o mesmo teste podem obter resultados diferentes. Testes determinísticos devem sempre produzir o mesmo resultado para a mesma entrada, independentemente do ambiente ou do momento da execução.
+
+**Problema:**  
+Testes não confiáveis dificultam manutenção, reduzem a confiança na suíte de testes e podem falhar aleatoriamente mesmo sem alteração no código.
+
+Exemplo:
+`assertTrue(true);`
+
+**Problema:**  
+O teste sempre passa, independentemente do comportamento do sistema. Isso cria uma falsa sensação de segurança e não valida nenhuma regra de negócio real.
+- Cobertura enganosa – testamos o método inteiro em vez de unidades; uma falha pode ocultar outro problema.
+- Dificuldade de manutenção – qualquer pequena mudança na lógica exige atualização de muitos testes.
+- Impedimento de refatoração – a alta complexidade e o acoplamento dificultam extrair comportamentos para classes menores.
+
+
+### Code smells no Endpoint `POST /solicitacoes/processar-lote`
+
+O controller apresenta alguns problemas de design que aumentam o acoplamento e dificultam manutenção e testes:
+
+- **Captura genérica de `Exception`**  
+  O uso de `try/catch` amplo esconde erros específicos e dificulta identificar a causa real de falhas. O ideal é tratar exceções específicas ou usar um handler global.
+
+- **Uso de `HashMap` para resposta**  
+  A resposta é montada manualmente com `HashMap`, usando strings fixas como chave. Isso pode gerar erros de digitação e falta de padronização. O mais adequado seria utilizar um DTO próprio para a resposta.
+
+- **Responsabilidade excessiva no controller**  
+  O controller calcula `clientes.size()` e monta a mensagem de retorno. Essas regras poderiam estar no serviço ou em uma classe responsável pela resposta, deixando o controller apenas como intermediador da requisição.
+
+- **Falta de validação de entrada**  
+  Não há verificação se a lista de clientes é nula ou vazia. Isso pode gerar `NullPointerException` ou comportamento inesperado.
+
+- **Alto acoplamento ao serviço**  
+  O controller depende diretamente de `AnaliseCreditoService`, dificultando testes unitários isolados e incentivando testes de integração mais pesados.
+
+# Model:
+OK
+
+# Repository:
+OK
+
+# Service Analise de crédito: - Venicius
+- Long Method: ~59 linhas centralizando validação, regras e IO.
+- Deep Nesting: 5 níveis de if aninhados. Dificulta a compreensão do fluxo.
+
+# Service Processador de  - Kelvin
+**Linhas 18–24 apresentam um *code smell*:**
+
+```java
+if (cep.startsWith("85")) { // Paraná
+    frete = 10.0;
+} else if (cep.startsWith("01")) { // SP
+    frete = 20.0;
+} else {
+    frete = 50.0;
+}
+```
+**Linhas 35 apresenta um *code smell*:**
+```
+System.out.println("INSERT INTO PEDIDOS VALUES (" + cliente + ", " + (valor + frete + imposto) + ")");
+```
+
+**Justificativa:**
+
+O trecho apresenta alguns problemas de manutenção e design:
+
+* **Valores hardcoded (Magic Numbers / Magic Strings):** os prefixos de CEP (`"85"`, `"01"`) e os valores de frete (`10.0`, `20.0`, `50.0`) estão definidos diretamente no código, dificultando a compreensão e manutenção.
+* **Baixa escalabilidade:** caso seja necessário adicionar novas regiões ou alterar valores de frete, será preciso modificar diretamente o código-fonte.
+* **Acoplamento da regra de negócio:** as regras de cálculo de frete estão fixas na implementação, o que dificulta futuras mudanças ou expansões da lógica.
+* **Vulnerabilidade de SQL injection:** Concatenação direta de strings em comandos SQL.
+
+### Testes
+OK
+
 ## 🚀 Tecnologias Utilizadas
 
 - **Java 21**
@@ -249,4 +341,3 @@ Este projeto é parte de um exercício de refatoração de código legado.
 ## 👨‍💻 Autor
 
 Desenvolvido como exemplo de aplicação Spring Boot com boas práticas de desenvolvimento.
-
