@@ -217,7 +217,6 @@ fintech-legacy-credit/
 │           └── br.com.nogueiranogueira.aularefatoracao.TestAnaliseCreditoService.java
 │           └── SolicitacaoCreditoIntegrationTest.java
 └── pom.xml
-```
 
 ## 🔐 Regras de Negócio
 
@@ -270,3 +269,42 @@ Este projeto é parte de um exercício de refatoração de código legado.
 
 Desenvolvido como exemplo de aplicação Spring Boot com boas práticas de desenvolvimento.
 
+## Dívida Técnica - tebas
+
+### Code smells Testes Frágeis
+
+
+**Explicação:**  
+Quando um teste depende da data atual, do estado do banco ou da configuração do ambiente, ele deixa de ser totalmente previsível. Isso significa que dois desenvolvedores executando o mesmo teste podem obter resultados diferentes. Testes determinísticos devem sempre produzir o mesmo resultado para a mesma entrada, independentemente do ambiente ou do momento da execução.
+
+**Problema:**  
+Testes não confiáveis dificultam manutenção, reduzem a confiança na suíte de testes e podem falhar aleatoriamente mesmo sem alteração no código.
+
+Exemplo:
+`assertTrue(true);`
+
+**Problema:**  
+O teste sempre passa, independentemente do comportamento do sistema. Isso cria uma falsa sensação de segurança e não valida nenhuma regra de negócio real.
+- Cobertura enganosa – testamos o método inteiro em vez de unidades; uma falha pode ocultar outro problema.
+- Dificuldade de manutenção – qualquer pequena mudança na lógica exige atualização de muitos testes.
+- Impedimento de refatoração – a alta complexidade e o acoplamento dificultam extrair comportamentos para classes menores.
+
+
+### Code smells no Endpoint `POST /solicitacoes/processar-lote`
+
+O controller apresenta alguns problemas de design que aumentam o acoplamento e dificultam manutenção e testes:
+
+- **Captura genérica de `Exception`**  
+  O uso de `try/catch` amplo esconde erros específicos e dificulta identificar a causa real de falhas. O ideal é tratar exceções específicas ou usar um handler global.
+
+- **Uso de `HashMap` para resposta**  
+  A resposta é montada manualmente com `HashMap`, usando strings fixas como chave. Isso pode gerar erros de digitação e falta de padronização. O mais adequado seria utilizar um DTO próprio para a resposta.
+
+- **Responsabilidade excessiva no controller**  
+  O controller calcula `clientes.size()` e monta a mensagem de retorno. Essas regras poderiam estar no serviço ou em uma classe responsável pela resposta, deixando o controller apenas como intermediador da requisição.
+
+- **Falta de validação de entrada**  
+  Não há verificação se a lista de clientes é nula ou vazia. Isso pode gerar `NullPointerException` ou comportamento inesperado.
+
+- **Alto acoplamento ao serviço**  
+  O controller depende diretamente de `AnaliseCreditoService`, dificultando testes unitários isolados e incentivando testes de integração mais pesados.
