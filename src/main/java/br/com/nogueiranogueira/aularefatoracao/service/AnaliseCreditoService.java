@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @Service
@@ -54,8 +56,12 @@ public class AnaliseCreditoService {
     }
 
     public void processarLote(List<SolicitacaoAnalise> solicitacoes) {
-        for (SolicitacaoAnalise solicitacao : solicitacoes) {
-            analisarSolicitacao(solicitacao);
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+
+            for (SolicitacaoAnalise solicitacao : solicitacoes) {
+                executor.submit(() -> analisarSolicitacao(solicitacao));
+            }
+
         }
     }
 }
