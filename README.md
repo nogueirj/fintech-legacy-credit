@@ -61,9 +61,9 @@ OK
 # Repository:
 OK
 
-# Service Analise de crédito:
--  Método ´analisarSolicitacao´ é um código podre pois é muito longo 
-- O código que analisa PJ e PF é o mesmo e pode ser passado para uma método (código repetido)
+### Service Analise de crédito: - Venicius
+- Long Method: ~59 linhas centralizando validação, regras e IO.
+- Deep Nesting: 5 níveis de if aninhados. Dificulta a compreensão do fluxo.
 
 # Service Processador de  - Kelvin
 **Linhas 18–24 apresentam um *code smell*:**
