@@ -1,18 +1,17 @@
 package br.com.nogueiranogueira.aularefatoracao.controller;
 
-import br.com.nogueiranogueira.aularefatoracao.model.SolicitacaoCredito;
+import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoAnalise;
+import br.com.nogueiranogueira.aularefatoracao.dto.TipoConta;
 import br.com.nogueiranogueira.aularefatoracao.service.AnaliseCreditoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/solicitacoes")
@@ -20,7 +19,7 @@ import java.util.Map;
 @Slf4j
 public class SolicitacaoCreditoController {
 
-    @Autowired
+    // Agora usamos a injeção do serviço refatorado
     private final AnaliseCreditoService analiseCreditoService;
 
     @PostMapping("/analisar")
@@ -34,7 +33,10 @@ public class SolicitacaoCreditoController {
         log.info("Recebida requisição de análise para cliente: {}", cliente);
 
         try {
-            boolean aprovado = analiseCreditoService.analisarSolicitacao(cliente, valor, score, negativado, tipoConta);
+            TipoConta tipo = TipoConta.valueOf(tipoConta.toUpperCase());
+            SolicitacaoAnalise solicitacao = new SolicitacaoAnalise(cliente, valor, score, negativado, tipo);
+
+            boolean aprovado = analiseCreditoService.analisarSolicitacao(solicitacao);
 
             Map<String, Object> response = new HashMap<>();
             response.put("cliente", cliente);
@@ -44,6 +46,11 @@ public class SolicitacaoCreditoController {
             response.put("mensagem", aprovado ? "Solicitação aprovada" : "Solicitação reprovada");
 
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.error("Tipo de conta inválido", e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("erro", "Tipo de conta inválido. Use PF ou PJ.");
+            return ResponseEntity.badRequest().body(error);
         } catch (Exception e) {
             log.error("Erro ao analisar solicitação", e);
             Map<String, Object> error = new HashMap<>();
@@ -58,7 +65,11 @@ public class SolicitacaoCreditoController {
         log.info("Recebida requisição para processar lote com {} clientes", clientes.size());
 
         try {
-            analiseCreditoService.processarLote(clientes);
+            List<SolicitacaoAnalise> lote = clientes.stream()
+                    .map(c -> new SolicitacaoAnalise(c, 1000.0, 600, false, TipoConta.PF))
+                    .collect(Collectors.toList());
+
+            analiseCreditoService.processarLote(lote);
 
             Map<String, String> response = new HashMap<>();
             response.put("mensagem", "Lote processado com sucesso");
@@ -74,48 +85,6 @@ public class SolicitacaoCreditoController {
         }
     }
 
-//    @GetMapping("/por-cliente/{cliente}")
-//    public ResponseEntity<List<SolicitacaoCredito>> obterSolicitacoesPorCliente(@PathVariable String cliente) {
-//        log.info("Buscando solicitações para cliente: {}", cliente);
-//        List<SolicitacaoCredito> solicitacoes = analiseCreditoService.obterSolicitacoesPorCliente(cliente);
-//        return ResponseEntity.ok(solicitacoes);
-//    }
-//
-//    @GetMapping("/aprovadas")
-//    public ResponseEntity<List<SolicitacaoCredito>> obterSolicitacoesAprovadas() {
-//        log.info("Buscando solicitações aprovadas");
-//        List<SolicitacaoCredito> solicitacoes = analiseCreditoService.obterSolicitacoesAprovadas();
-//        return ResponseEntity.ok(solicitacoes);
-//    }
-//
-//    @GetMapping("/reprovadas")
-//    public ResponseEntity<List<SolicitacaoCredito>> obterSolicitacoesReprovadas() {
-//        log.info("Buscando solicitações reprovadas");
-//        List<SolicitacaoCredito> solicitacoes = analiseCreditoService.obterSolicitacoesReprovadas();
-//        return ResponseEntity.ok(solicitacoes);
-//    }
-//
-//    @GetMapping("/total-aprovados/{tipoConta}")
-//    public ResponseEntity<Map<String, Long>> obterTotalAprovadosPorTipo(@PathVariable String tipoConta) {
-//        log.info("Contando solicitações aprovadas para tipo: {}", tipoConta);
-//        Long total = analiseCreditoService.obterTotalAprovadosPorTipo(tipoConta);
-//
-//        Map<String, Long> response = new HashMap<>();
-//        response.put("tipoConta", Long.valueOf(tipoConta.length())); // Apenas para exemplo
-//        response.put("totalAprovados", total);
-//
-//        return ResponseEntity.ok(response);
-//    }
-//
-//    @GetMapping("/por-periodo")
-//    public ResponseEntity<List<SolicitacaoCredito>> obterSolicitacoesPorPeriodo(
-//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
-//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim) {
-//        log.info("Buscando solicitações entre {} e {}", inicio, fim);
-//        List<SolicitacaoCredito> solicitacoes = analiseCreditoService.obterSolicitacoesPorPeriodo(inicio, fim);
-//        return ResponseEntity.ok(solicitacoes);
-//    }
-
     @GetMapping("/saude")
     public ResponseEntity<Map<String, String>> saude() {
         Map<String, String> response = new HashMap<>();
@@ -124,4 +93,3 @@ public class SolicitacaoCreditoController {
         return ResponseEntity.ok(response);
     }
 }
-

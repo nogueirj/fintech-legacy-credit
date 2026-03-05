@@ -1,67 +1,61 @@
 package br.com.nogueiranogueira.aularefatoracao.service;
 
+import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoAnalise;
+import br.com.nogueiranogueira.aularefatoracao.strategy.SolicitacaoStrategy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.List;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class AnaliseCreditoService {
 
-    public boolean analisarSolicitacao(String cliente, double valor, int score, boolean negativado, String tipoConta) {
-        System.out.println("Iniciando análise para: " + cliente);
-        if (valor > 0) {
-            if (!negativado) {
-                if (score > 500) {
-                    // boas práticas, consulta externas eu utilizo um try catch para tratar exceções que possam ocorrer na comunicação
-                    try {
-                        System.out.println("Consultando Bureau de Crédito Externo...");
-                        Thread.sleep(2000); // Simula 2 segundos de espera da consulta de crédito externo a instituição
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+    // O Spring injeta automaticamente o AnalisePF e AnalisePJ aqui
+    private final List<SolicitacaoStrategy> strategies;
 
-                    if (tipoConta.equals("PF")) {
-                        if (valor > 5000 && score < 800) {
-                            System.out.println("Reprovado: Valor alto para PF com score médio");
-                            return false;
-                        } else {
-                            if (new Date().getDay() == 0 || new Date().getDay() == 6) { // Fim de semana? (Uso de Date depreciado)
-                                System.out.println("Aprovação manual necessária no fim de semana");
-                                return false;
-                            }
-                            System.out.println("Aprovado PF");
-                            return true;
-                        }
-                    } else if (tipoConta.equals("PJ")) {
-                        if (valor > 50000 && score < 700) {
-                            System.out.println("Reprovado: Risco PJ");
-                            return false;
-                        }
-                        System.out.println("Aprovado PJ");
-                        return true;
-                    } else {
-                        System.out.println("Tipo de conta desconhecido");
-                        return false;
-                    }
+    public boolean analisarSolicitacao(SolicitacaoAnalise solicitacao) {
+        log.info("Iniciando análise para: {}", solicitacao.cliente());
 
-                } else {
-                    System.out.println("Score baixo");
-                    return false;
-                }
-            } else {
-                System.out.println("Cliente negativado");
-                return false;
-            }
-        } else {
-            System.out.println("Valor inválido");
+        // Fail-Fast: Validações iniciais (Regras aplicáveis a ambos)
+        if (solicitacao.valor() <= 0) {
+            log.warn("Valor inválido para a solicitação.");
             return false;
         }
+        if (solicitacao.negativado()) {
+            log.warn("Cliente negativado. Solicitação reprovada.");
+            return false;
+        }
+        if (solicitacao.score() <= 500) {
+            log.warn("Score muito baixo. Solicitação reprovada.");
+            return false;
+        }
+
+        try {
+            log.info("Consultando Bureau de Crédito Externo...");
+            Thread.sleep(2000); // Simula delay do serviço externo
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Erro na comunicação com o Bureau de Crédito", e);
+            return false;
+        }
+
+        // Executa a estratégia compatível
+        return strategies.stream()
+                .filter(strategy -> strategy.Elegivel(solicitacao))
+                .findFirst()
+                .map(strategy -> strategy.Analisar(solicitacao))
+                .orElseGet(() -> {
+                    log.error("Nenhuma estratégia encontrada para o tipo de conta: {}", solicitacao.tipoConta());
+                    return false;
+                });
     }
 
-    public void processarLote(List<String> clientes) {
-        for (String c : clientes) {
-            analisarSolicitacao(c, 1000.0, 600, false, "PF");
+    public void processarLote(List<SolicitacaoAnalise> solicitacoes) {
+        for (SolicitacaoAnalise solicitacao : solicitacoes) {
+            analisarSolicitacao(solicitacao);
         }
     }
 }
