@@ -14,8 +14,8 @@ OK
 OK
 
 ### Service Analise de crédito:
--  Método ´analisarSolicitacao´ é um código podre pois é muito longo 
-- O código que analisa PJ e PF é o mesmo e pode ser passado para uma método (código repetido)
+- Long Method: ~59 linhas centralizando validação, regras e IO.
+- Deep Nesting: 5 níveis de if aninhados. Dificulta a compreensão do fluxo.
 
 ### Service Processador de venda
 - 
