@@ -1,5 +1,6 @@
 package br.com.nogueiranogueira.aularefatoracao.controller;
 
+import br.com.nogueiranogueira.aularefatoracao.dto.SolicitacaoResponse;
 import br.com.nogueiranogueira.aularefatoracao.model.SolicitacaoCredito;
 import br.com.nogueiranogueira.aularefatoracao.service.AnaliseCreditoService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class SolicitacaoCreditoController {
     private final AnaliseCreditoService analiseCreditoService;
 
     @PostMapping("/analisar")
-    public ResponseEntity<Map<String, Object>> analisarSolicitacao(
+    public ResponseEntity<?> analisarSolicitacao(
             @RequestParam String cliente,
             @RequestParam Double valor,
             @RequestParam Integer score,
@@ -36,12 +37,13 @@ public class SolicitacaoCreditoController {
         try {
             boolean aprovado = analiseCreditoService.analisarSolicitacao(cliente, valor, score, negativado, tipoConta);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("cliente", cliente);
-            response.put("valor", valor);
-            response.put("score", score);
-            response.put("aprovado", aprovado);
-            response.put("mensagem", aprovado ? "Solicitação aprovada" : "Solicitação reprovada");
+            SolicitacaoResponse response = new SolicitacaoResponse(
+                    cliente,
+                    valor,
+                    score,
+                    aprovado,
+                    aprovado ? "Solicitação aprovada" : "Solicitação reprovada"
+            );
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
