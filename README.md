@@ -18,7 +18,29 @@ OK
 - O código que analisa PJ e PF é o mesmo e pode ser passado para uma método (código repetido)
 
 ### Service Processador de venda
-- 
+**Linhas 18–24 apresentam um *code smell*:**
+
+```java
+if (cep.startsWith("85")) { // Paraná
+    frete = 10.0;
+} else if (cep.startsWith("01")) { // SP
+    frete = 20.0;
+} else {
+    frete = 50.0;
+}
+```
+
+**Justificativa:**
+
+O trecho apresenta alguns problemas de manutenção e design:
+
+* **Valores hardcoded (Magic Numbers / Magic Strings):** os prefixos de CEP (`"85"`, `"01"`) e os valores de frete (`10.0`, `20.0`, `50.0`) estão definidos diretamente no código, dificultando a compreensão e manutenção.
+* **Baixa escalabilidade:** caso seja necessário adicionar novas regiões ou alterar valores de frete, será preciso modificar diretamente o código-fonte.
+* **Acoplamento da regra de negócio:** as regras de cálculo de frete estão fixas na implementação, o que dificulta futuras mudanças ou expansões da lógica.
+* **Vulnerabilidade de SQL injection:** Concatenação direta de strings em comandos SQL.
+```
+System.out.println("INSERT INTO PEDIDOS VALUES (" + cliente + ", " + (valor + frete + imposto) + ")");
+```
 
 ### Testes
 
@@ -269,28 +291,4 @@ Este projeto é parte de um exercício de refatoração de código legado.
 ## 👨‍💻 Autor
 
 Desenvolvido como exemplo de aplicação Spring Boot com boas práticas de desenvolvimento.
-
-## Branch Kelvin 👾
-
-### ProcessadorVendaService
-
-**Linhas 18–24 apresentam um *code smell*:**
-
-```java
-if (cep.startsWith("85")) { // Paraná
-    frete = 10.0;
-} else if (cep.startsWith("01")) { // SP
-    frete = 20.0;
-} else {
-    frete = 50.0;
-}
-```
-
-**Justificativa:**
-
-O trecho apresenta alguns problemas de manutenção e design:
-
-* **Valores hardcoded (Magic Numbers / Magic Strings):** os prefixos de CEP (`"85"`, `"01"`) e os valores de frete (`10.0`, `20.0`, `50.0`) estão definidos diretamente no código, dificultando a compreensão e manutenção.
-* **Baixa escalabilidade:** caso seja necessário adicionar novas regiões ou alterar valores de frete, será preciso modificar diretamente o código-fonte.
-* **Acoplamento da regra de negócio:** as regras de cálculo de frete estão fixas na implementação, o que dificulta futuras mudanças ou expansões da lógica.
  
