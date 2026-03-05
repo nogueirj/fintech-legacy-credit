@@ -29,6 +29,10 @@ if (cep.startsWith("85")) { // Paraná
     frete = 50.0;
 }
 ```
+**Linhas 35 apresenta um *code smell*:**
+```
+System.out.println("INSERT INTO PEDIDOS VALUES (" + cliente + ", " + (valor + frete + imposto) + ")");
+```
 
 **Justificativa:**
 
@@ -38,9 +42,6 @@ O trecho apresenta alguns problemas de manutenção e design:
 * **Baixa escalabilidade:** caso seja necessário adicionar novas regiões ou alterar valores de frete, será preciso modificar diretamente o código-fonte.
 * **Acoplamento da regra de negócio:** as regras de cálculo de frete estão fixas na implementação, o que dificulta futuras mudanças ou expansões da lógica.
 * **Vulnerabilidade de SQL injection:** Concatenação direta de strings em comandos SQL.
-```
-System.out.println("INSERT INTO PEDIDOS VALUES (" + cliente + ", " + (valor + frete + imposto) + ")");
-```
 
 ### Testes
 
