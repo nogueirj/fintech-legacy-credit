@@ -2,7 +2,7 @@
 
 Aplicação de análise de crédito desenvolvida com Spring Boot 4.0.3, JPA, H2 Database e DevTools.
 
-## ☠️ Problemas encontrados
+# ☠️ Problemas encontrados
 
 # Controller:
 
@@ -46,17 +46,17 @@ O controller apresenta alguns problemas de design que aumentam o acoplamento e d
 - **Alto acoplamento ao serviço**  
   O controller depende diretamente de `AnaliseCreditoService`, dificultando testes unitários isolados e incentivando testes de integração mais pesados.
 
-### Model:
+# Model:
 OK
 
-### Repository:
+# Repository:
 OK
 
-### Service Analise de crédito:
+# Service Analise de crédito:
 -  Método ´analisarSolicitacao´ é um código podre pois é muito longo 
 - O código que analisa PJ e PF é o mesmo e pode ser passado para uma método (código repetido)
 
-### Service Processador de  - Kelvin
+# Service Processador de  - Kelvin
 **Linhas 18–24 apresentam um *code smell*:**
 
 ```java
