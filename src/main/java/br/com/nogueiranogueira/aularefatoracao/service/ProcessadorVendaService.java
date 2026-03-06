@@ -1,5 +1,7 @@
 package br.com.nogueiranogueira.aularefatoracao.service;
 
+import br.com.nogueiranogueira.aularefatoracao.strategy.CalculadoraImposto;
+
 public class ProcessadorVendaService {
 
     public void processar(String cliente, double valor, String tipo, String cep) {
@@ -24,12 +26,7 @@ public class ProcessadorVendaService {
         }
 
 
-        double imposto = 0;
-        if (tipo.equals("PRODUTO")) {
-            imposto = valor * 0.18;
-        } else if (tipo.equals("SERVICO")) {
-            imposto = valor * 0.05;
-        }
+        double imposto = CalculadoraImposto.calcularPorTipo(tipo, valor);
 
         System.out.println("Conectando no banco...");
         System.out.println("INSERT INTO PEDIDOS VALUES (" + cliente + ", " + (valor + frete + imposto) + ")");
